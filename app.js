@@ -21,7 +21,7 @@ async function checkIn() {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
-        const contractAddress = '0x85c2658824ACE3c14FE2125f9D19e1Eee75DD2De'; // Укажите адрес вашего контракта
+        const contractAddress = '0x35010ff1e222Ba9a11a79768188661D2bcBd9f74'; // Укажите адрес вашего контракта
         const contractABI = [
             "function checkIn() payable"
         ];
