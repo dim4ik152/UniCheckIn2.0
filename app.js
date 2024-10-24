@@ -1,12 +1,12 @@
 // Chain ID для Unichain Holesky
-const UNICHAIN_HOLESKY_CHAIN_ID = '0x515'; // Замените на правильный Chain ID
+const UNICHAIN_HOLESKY_CHAIN_ID = '0x515'; // Правильный Chain ID
 
 // Функция для проверки текущей сети
 async function checkNetwork() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const { chainId } = await provider.getNetwork();
 
-    if (chainId !== UNICHAIN_HOLESKY_CHAIN_ID) {
+    if (chainId !== parseInt(UNICHAIN_HOLESKY_CHAIN_ID, 16)) {
         try {
             await switchNetwork();
         } catch (error) {
@@ -30,8 +30,8 @@ async function switchNetwork() {
                     method: 'wallet_addEthereumChain',
                     params: [
                         {
-                            chainId: UNICHAIN_HOLESKY_CHAIN_ID, // Unichain Holesky Chain ID
-                            chainName: 'Unichain Sepolia',
+                            chainId: UNICHAIN_HOLESKY_CHAIN_ID,
+                            chainName: 'Unichain Holesky',
                             rpcUrls: ['https://sepolia.unichain.org'], // Укажите правильный RPC URL
                             nativeCurrency: {
                                 name: 'UNI',
@@ -55,7 +55,7 @@ async function checkWalletConnection() {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
             const account = accounts[0];
-            document.getElementById('wallet-address').innerText = `Connected: ${account}`;
+            document.getElementById('wallet-address').innerText = `Connected: ${account}`; // Исправлено на шаблонные строки
             console.log('Wallet already connected:', account);
         } else {
             console.log('Wallet is not connected.');
@@ -73,7 +73,7 @@ async function connectWallet() {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const account = accounts[0];
             console.log('Connected account:', account);
-            document.getElementById('wallet-address').innerText = `Connected: ${account}`;
+            document.getElementById('wallet-address').innerText = `Connected: ${account}`; // Исправлено на шаблонные строки
         } catch (err) {
             console.error('Error connecting to wallet:', err);
         }
@@ -90,7 +90,7 @@ async function checkIn() {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
-        const contractAddress = '0x85c2658824ACE3c14FE2125f9D19e1Eee75DD2De'; // Укажите адрес вашего контракта
+        const contractAddress = '0x35010ff1e222Ba9a11a79768188661D2bcBd9f74'; // Укажите адрес вашего контракта
         const contractABI = [
             "function checkIn() payable"
         ];
@@ -99,10 +99,12 @@ async function checkIn() {
 
         try {
             const tx = await contract.checkIn({
-                value: ethers.utils.parseEther('0.0001') // сумма для транзакции
+                value: ethers.utils.parseEther('0.0001') // Сумма для транзакции
             });
 
             console.log('Transaction submitted:', tx);
+            await tx.wait(); // Дождаться подтверждения транзакции
+            console.log('Transaction confirmed:', tx);
         } catch (err) {
             console.error('Transaction failed:', err);
         }
