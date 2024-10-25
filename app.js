@@ -3,6 +3,11 @@ const UNICHAIN_HOLESKY_CHAIN_ID = '0x515'; // Правильный Chain ID
 
 // Функция для проверки текущей сети
 async function checkNetwork() {
+    if (typeof window.ethereum === 'undefined') {
+        alert('Please install a cryptocurrency wallet like MetaMask.');
+        return;
+    }
+    
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const { chainId } = await provider.getNetwork();
 
@@ -23,7 +28,6 @@ async function switchNetwork() {
             params: [{ chainId: UNICHAIN_HOLESKY_CHAIN_ID }]
         });
     } catch (switchError) {
-        // Сеть не добавлена в MetaMask
         if (switchError.code === 4902) {
             try {
                 await window.ethereum.request({
@@ -32,13 +36,13 @@ async function switchNetwork() {
                         {
                             chainId: UNICHAIN_HOLESKY_CHAIN_ID,
                             chainName: 'Unichain Holesky',
-                            rpcUrls: ['https://sepolia.unichain.org'], // Укажите правильный RPC URL
+                            rpcUrls: ['https://sepolia.unichain.org'],
                             nativeCurrency: {
                                 name: 'UNI',
                                 symbol: 'UNI',
                                 decimals: 18
                             },
-                            blockExplorerUrls: ['https://unichain-sepolia.blockscout.com/'] // Укажите блок-эксплорер
+                            blockExplorerUrls: ['https://unichain-sepolia.blockscout.com/']
                         }
                     ]
                 });
@@ -49,19 +53,23 @@ async function switchNetwork() {
     }
 }
 
-// Проверяем наличие MetaMask и автоматически подключаемся, если ранее был подключен
+// Функция для проверки состояния кошелька
 async function checkWalletConnection() {
     if (typeof window.ethereum !== 'undefined') {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-            const account = accounts[0];
-            document.getElementById('wallet-address').innerText = `Connected: ${account}`; // Исправлено на шаблонные строки
-            console.log('Wallet already connected:', account);
-        } else {
-            console.log('Wallet is not connected.');
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                const account = accounts[0];
+                document.getElementById('wallet-address').innerText = `Connected: ${account}`;
+                console.log('Wallet already connected:', account);
+            } else {
+                console.log('Wallet is not connected.');
+            }
+        } catch (err) {
+            console.error('Error checking wallet connection:', err);
         }
     } else {
-        alert('Please install a cryptocurrency wallet like MetaMask, OKX Wallet, or any other wallet that supports Ethereum.');
+        alert('Please install a cryptocurrency wallet like MetaMask.');
     }
 }
 
@@ -69,28 +77,27 @@ async function checkWalletConnection() {
 async function connectWallet() {
     if (typeof window.ethereum !== 'undefined') {
         try {
-            // Запрос на подключение к кошельку
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const account = accounts[0];
+            document.getElementById('wallet-address').innerText = `Connected: ${account}`;
             console.log('Connected account:', account);
-            document.getElementById('wallet-address').innerText = `Connected: ${account}`; // Исправлено на шаблонные строки
         } catch (err) {
             console.error('Error connecting to wallet:', err);
         }
     } else {
-        alert('Please install a cryptocurrency wallet like MetaMask, OKX Wallet, or any other wallet that supports Ethereum.');
+        alert('Please install a cryptocurrency wallet like MetaMask.');
     }
 }
 
 // Функция для выполнения Check In
 async function checkIn() {
-    await checkNetwork(); // Проверяем сеть перед выполнением функции
+    await checkNetwork();
 
     if (typeof window.ethereum !== 'undefined') {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
-        const contractAddress = '0x35010ff1e222Ba9a11a79768188661D2bcBd9f74'; // Укажите адрес вашего контракта
+        const contractAddress = '0x35010ff1e222Ba9a11a79768188661D2bcBd9f74';
         const contractABI = [
             "function checkIn() payable"
         ];
@@ -99,11 +106,10 @@ async function checkIn() {
 
         try {
             const tx = await contract.checkIn({
-                value: ethers.utils.parseEther('0.0001') // Сумма для транзакции
+                value: ethers.utils.parseEther('0.0001')
             });
-
             console.log('Transaction submitted:', tx);
-            await tx.wait(); // Дождаться подтверждения транзакции
+            await tx.wait();
             console.log('Transaction confirmed:', tx);
         } catch (err) {
             console.error('Transaction failed:', err);
@@ -117,6 +123,11 @@ async function checkIn() {
 window.addEventListener('load', async () => {
     await checkWalletConnection();
     await checkNetwork();
+
+    // Если MetaMask отключается при обновлении, просим подключить его снова
+    if (!document.getElementById('wallet-address').innerText.includes('Connected')) {
+        document.getElementById('wallet-address').innerText = 'Please connect your wallet.';
+    }
 });
 
 // Привязываем кнопки к функциям
