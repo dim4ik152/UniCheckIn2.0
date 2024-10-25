@@ -6,13 +6,29 @@ function isMetaMaskInstalled() {
     return typeof window.ethereum !== 'undefined';
 }
 
+// Ждем инициализации MetaMask
+async function waitForMetaMask() {
+    return new Promise((resolve) => {
+        if (isMetaMaskInstalled()) {
+            resolve();
+        } else {
+            window.addEventListener('ethereum#initialized', resolve, {
+                once: true,
+            });
+
+            // Время ожидания для MetaMask
+            setTimeout(resolve, 3000); // Максимум 3 секунды ожидания
+        }
+    });
+}
+
 // Функция для проверки текущей сети
 async function checkNetwork() {
     if (!isMetaMaskInstalled()) {
         alert('Please install a cryptocurrency wallet like MetaMask.');
         return;
     }
-    
+
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const { chainId } = await provider.getNetwork();
 
@@ -66,6 +82,7 @@ async function connectWallet() {
 
 // Вызов проверки при загрузке страницы
 window.addEventListener('load', async () => {
+    await waitForMetaMask();  // Ждем инициализации MetaMask
     if (isMetaMaskInstalled()) {
         await checkWalletConnection();
         await checkNetwork();
@@ -75,5 +92,9 @@ window.addEventListener('load', async () => {
 });
 
 // Привязываем кнопки к функциям
-document.getElementById('connectButton').addEventListener('click', connectWallet);
-document.getElementById('checkInButton').addEventListener('click', checkIn);
+document.getElementById('connectButton').addEventListener('click', async () => {
+    await connectWallet();
+});
+document.getElementById('checkInButton').addEventListener('click', async () => {
+    await checkIn();
+});
